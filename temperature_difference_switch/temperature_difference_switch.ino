@@ -17,33 +17,35 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 #define THERMISTOR_1_PIN A1
 #define THERMISTOR_2_PIN A2
 
+#define OUTPUT_PIN 2
+
 #define C1 1.287720493e-03
 #define C2 2.356959101e-04
 #define C3 0.9520790711e-7
 
 void setup() {
-  pinMode(2, OUTPUT);
-  pinMode(A1, INPUT);
-  pinMode(A2, INPUT);
+  pinMode(OUTPUT_PIN, OUTPUT);
+  pinMode(THERMISTOR_1_PIN, INPUT);
+  pinMode(THERMISTOR_2_PIN, INPUT);
   
-  cli();  // This next section of code is timing critical, so interrupts are disabled  
-  // Start the timed Sequence for configuring the clock prescaler
+  //Required for my arduino nano to run at the correct speed
+  cli();
   CLKPR = 0x80;
   CLKPR = 0x01;
-  sei();        // Enable interrupts
+  sei();
 
   Serial.begin(9600);
 
-  digitalWrite(2, HIGH);
+  digitalWrite(OUTPUT_PIN, HIGH);
 
   if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
     Serial.println(F("SSD1306 allocation failed"));
     for(;;); // Don't proceed, loop forever
   }
 
-  display.setTextSize(1);      // Normal 1:1 pixel scale
-  display.setTextColor(SSD1306_WHITE); // Draw white text
-  display.cp437(true);         // Use full 256 char 'Code Page 437' font
+  display.setTextSize(2);      
+  display.setTextColor(SSD1306_WHITE);
+  display.cp437(true);
 
   display.display();
 
@@ -61,9 +63,9 @@ void loop() {
   display_temperatures(temp1, temp2);
 
   if (temp2 - temp1 > TEMPERATURE_DELTA) { 
-    digitalWrite(2, LOW);
+    digitalWrite(OUTPUT_PIN, LOW);
   } else {
-    digitalWrite(2, HIGH);
+    digitalWrite(OUTPUT_PIN, HIGH);
   }
 
   delay(500);
@@ -84,7 +86,7 @@ float calculate_temperature(int voltage) {
 void display_temperatures(float temp1, float temp2) {
   display.clearDisplay();
 
-  display.setCursor(0, 0);     // Start at top-left corner
+  display.setCursor(0, 0);
 
   display.print("T1: ");
   display.print(temp1);
