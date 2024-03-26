@@ -10,18 +10,26 @@
 #define SCREEN_ADDRESS 0x3C ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
+//value of the known resistor
 #define KNOWN_RESISTOR 15000
+
+#define UPDATE_INTERVAL 10000
 
 #define TEMPERATURE_DELTA 2
 
+//io pins
 #define THERMISTOR_1_PIN A1
 #define THERMISTOR_2_PIN A2
 
 #define OUTPUT_PIN 2
 
+//steinhart-hart equation coefficients
 #define C1 1.287720493e-03
 #define C2 2.356959101e-04
 #define C3 0.9520790711e-7
+
+int last_update;
+bool status;
 
 void setup() {
   pinMode(OUTPUT_PIN, OUTPUT);
@@ -49,6 +57,10 @@ void setup() {
 
   display.display();
 
+  last_update = millis();
+
+  status = false;
+
 }
 
 
@@ -62,13 +74,23 @@ void loop() {
 
   display_temperatures(temp1, temp2);
 
-  if (temp2 - temp1 > TEMPERATURE_DELTA) { 
+  //check for overflow
+  if (millis() < last_update) {
+    last_update = millis();
+  }
+
+  //update status
+  if (millis() - last_update > UPDATE_INTERVAL) {
+    status = temp2 - temp1 > TEMPERATURE_DELTA;
+    last_update = millis();
+  }
+
+  //set output pin
+  if (status) { 
     digitalWrite(OUTPUT_PIN, LOW);
   } else {
     digitalWrite(OUTPUT_PIN, HIGH);
   }
-
-  delay(500);
 }
 
 float calculate_temperature(int voltage) {
