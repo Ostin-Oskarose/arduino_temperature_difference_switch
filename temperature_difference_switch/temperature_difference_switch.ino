@@ -80,8 +80,8 @@ void loop() {
   }
 
   //update status
-  if (millis() - last_update > UPDATE_INTERVAL) {
-    status = temp2 - temp1 > TEMPERATURE_DELTA;
+  if (millis() - last_update > UPDATE_INTERVAL && status != temp2 - temp1 > TEMPERATURE_DELTA) {
+    status = !status;
     last_update = millis();
   }
 
